@@ -58,7 +58,7 @@ func main() {
 
 		fmt.Println()
 
-		webserver.Start(*port)
+		webserver.Start(*port, workingDir)
 		break
 
 	default:

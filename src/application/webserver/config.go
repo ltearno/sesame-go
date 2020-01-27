@@ -15,8 +15,8 @@ type ConfigurationFile struct {
 	Users                map[string]string `json:"users"`
 }
 
-func ReadConfiguration() *ConfigurationFile {
-	bytes, err := ioutil.ReadFile("configuration.json")
+func ReadConfiguration(fileName string) *ConfigurationFile {
+	bytes, err := ioutil.ReadFile(fileName)
 	checkError(err)
 
 	config := &ConfigurationFile{}

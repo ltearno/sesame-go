@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -183,10 +184,10 @@ type WebServer struct {
 }
 
 // Start runs a webserver hosting the application
-func Start(port int) {
+func Start(port int, workingDir string) {
 	fmt.Println("starting web server")
 
-	if !tools.ExistsFile("private.pem") {
+	if !tools.ExistsFile(filepath.Join(workingDir, "private.pem")) {
 		fmt.Println("generating private key...")
 		reader := rand.Reader
 		bitSize := 2048
@@ -194,11 +195,11 @@ func Start(port int) {
 		privateKey, err := rsa.GenerateKey(reader, bitSize)
 		checkError(err)
 
-		savePEMKey("private.pem", privateKey)
+		savePEMKey(filepath.Join(workingDir, "private.pem"), privateKey)
 	}
 
 	fmt.Println("loading private key...")
-	privateKey := loadPEMKey("private.pem")
+	privateKey := loadPEMKey(filepath.Join(workingDir, "private.pem"))
 
 	n := base64.RawURLEncoding.EncodeToString(privateKey.PublicKey.N.Bytes())
 	e := encodeUint64ToString(uint64(privateKey.PublicKey.E))
@@ -215,7 +216,7 @@ func Start(port int) {
 	crypto := jwt.NewRS256(jwt.RSAPrivateKey(privateKey))
 
 	server := &WebServer{
-		config:     ReadConfiguration(),
+		config:     ReadConfiguration(filepath.Join(workingDir, "configuration.json")),
 		name:       "sesame",
 		privateKey: privateKey,
 		crypto:     crypto,
@@ -228,5 +229,5 @@ func Start(port int) {
 
 	fmt.Printf("\n you can use your internet browser to go here : https://127.0.0.1:%d\n", port)
 
-	log.Fatal(http.ListenAndServeTLS(fmt.Sprintf("0.0.0.0:%d", port), "tls.cert.pem", "tls.key.pem", router))
+	log.Fatal(http.ListenAndServeTLS(fmt.Sprintf("0.0.0.0:%d", port), filepath.Join(workingDir, "tls.cert.pem"), filepath.Join(workingDir, "tls.key.pem"), router))
 }
