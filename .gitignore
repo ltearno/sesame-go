@@ -6,3 +6,4 @@ assetsgen/
 
 src/github.com/
 configuration.json
+*.pem

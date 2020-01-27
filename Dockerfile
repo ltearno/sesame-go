@@ -17,6 +17,9 @@ ADD configuration.json ./
 RUN make build-embed-assets
 RUN make install
 
+ADD tls.key.pem ./
+ADD tls.cert.pem ./
+
 RUN chown -R 1000:1000 /sesame-go
 
 ENTRYPOINT [ "/sesame-go/bin/application" ]

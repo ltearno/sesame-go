@@ -226,7 +226,7 @@ func Start(port int) {
 
 	server.init(router)
 
-	fmt.Printf("\n you can use your internet browser to go here : http://127.0.0.1:%d\n", port)
+	fmt.Printf("\n you can use your internet browser to go here : https://127.0.0.1:%d\n", port)
 
-	log.Fatal(http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", port), router))
+	log.Fatal(http.ListenAndServeTLS(fmt.Sprintf("0.0.0.0:%d", port), "tls.cert.pem", "tls.key.pem", router))
 }

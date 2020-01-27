@@ -13,7 +13,7 @@ func main() {
 
 	var printUsage = false
 	var help = flag.Bool("help", false, "show this help")
-	var port = flag.Int("port", 8080, "webserver listening port")
+	var port = flag.Int("port", 8443, "webserver listening port")
 
 	flag.Parse()
 
