@@ -3,29 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
-	"path"
 	"path/filepath"
 
-	"application/repository"
-	"application/tools"
 	"application/webserver"
 )
 
-func detectGitRootdirectory(dir string) *string {
-	for cur := dir; cur != "/"; {
-		maybeGitDir := path.Join(cur, ".git")
-		if tools.ExistsFile(maybeGitDir) {
-			return &cur
-		}
-
-		cur = path.Dir(cur)
-	}
-
-	return nil
-}
-
 func main() {
-	fmt.Printf("\ngit-docs, welcome\n\n")
+	fmt.Printf("\nwelcome\n\n")
 
 	var printUsage = false
 	var help = flag.Bool("help", false, "show this help")
@@ -45,10 +29,10 @@ func main() {
 	}
 
 	printHelp := func() {
-		fmt.Printf("\ngit-docs usage :\n\n  git-docs [OPTIONS] verbs...\n\nOPTIONS :\n\n")
+		fmt.Printf("\nsesame usage :\n\n  sesame [OPTIONS] verbs...\n\nOPTIONS :\n\n")
 		flag.PrintDefaults()
 		fmt.Printf("\nVERBS :\n\n  serve\n        serves the Web UI\n")
-		fmt.Printf("\nEXAMPLES :\n\n  git-docs serve\n  git-docs serve .\n  git-docs serve ~/repos/my-git-repo\n")
+		fmt.Printf("\nEXAMPLES :\n\n  sesame serve\n  sesame serve .\n  sesame serve ~/repos/my-git-repo\n")
 	}
 
 	if printUsage {
@@ -70,19 +54,11 @@ func main() {
 			return
 		}
 
-		fmt.Printf("content directory: %s\n", workingDir)
-
-		gitRepositoryDir := detectGitRootdirectory(workingDir)
-		if gitRepositoryDir == nil {
-			fmt.Println("not working with git repository")
-		} else {
-			fmt.Printf("working with git repository: %s\n", *gitRepositoryDir)
-		}
+		fmt.Printf("working directory: %s\n", workingDir)
 
 		fmt.Println()
 
-		repo := repository.NewGitDocsRepository(gitRepositoryDir, workingDir)
-		webserver.Start(repo, *port)
+		webserver.Start(*port)
 		break
 
 	default:

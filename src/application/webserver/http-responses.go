@@ -15,7 +15,7 @@ func httpResponse(w http.ResponseWriter, code int, contentType string, body stri
 func jsonResponse(w http.ResponseWriter, code int, value interface{}) {
 	body, err := json.Marshal(value)
 	if err != nil {
-		fmt.Fprintf(w, "{ \"message\": \"cannot marshall JSON\" }")
+		fmt.Fprintf(w, "{ \"message\": \"error 98AAGGD\" }")
 		return
 	}
 
