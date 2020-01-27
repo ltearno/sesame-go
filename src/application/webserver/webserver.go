@@ -1,15 +1,13 @@
 package webserver
 
 import (
+	"application/assetsgen"
 	"application/tools"
 	"encoding/base64"
-	"encoding/binary"
-	"encoding/pem"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
+	"strings"
 	"time"
 
 	"github.com/gbrlsnchs/jwt"
@@ -18,7 +16,6 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha512"
-	"crypto/x509"
 )
 
 type JwtPayload struct {
@@ -40,41 +37,16 @@ type ServerDescription struct {
 	Keys []KeyDescription `json:"keys"`
 }
 
-func encodeUint64ToBytes(v uint64) []byte {
-	data := make([]byte, 8)
-	binary.BigEndian.PutUint64(data, v)
-	i := 0
-	for ; i < len(data); i++ {
-		if data[i] != 0x0 {
-			break
-		}
-	}
-
-	return data[i:]
-}
-
-func encodeUint64ToString(v uint64) string {
-	return base64.RawURLEncoding.EncodeToString(encodeUint64ToBytes(v))
-}
-
 func handlerCerts(w http.ResponseWriter, r *http.Request, p httprouter.Params, server *WebServer) {
-	n := base64.RawURLEncoding.EncodeToString(server.privateKey.PublicKey.N.Bytes())
-	e := encodeUint64ToString(uint64(server.privateKey.PublicKey.E))
-
-	checksum := sha512.New()
-	checksum.Write(server.privateKey.PublicKey.N.Bytes())
-	checksum.Write(encodeUint64ToBytes(uint64(server.privateKey.PublicKey.E)))
-	kid := base64.RawURLEncoding.EncodeToString(checksum.Sum(make([]byte, 0)))
-
 	response := ServerDescription{
 		Keys: []KeyDescription{
 			KeyDescription{
-				Kid: kid,
+				Kid: server.kid,
 				Kty: "RSA",
 				Alg: "RSA256",
 				Use: "sig",
-				N:   n,
-				E:   e,
+				N:   server.n,
+				E:   server.e,
 			},
 		},
 	}
@@ -112,6 +84,42 @@ func handlerDemo(w http.ResponseWriter, r *http.Request, p httprouter.Params, se
 	})
 }
 
+func handlerGetWebUI(w http.ResponseWriter, r *http.Request, p httprouter.Params, server *WebServer) {
+	relativePath := p.ByName("requested_resource")
+	if strings.HasPrefix(relativePath, "/") {
+		relativePath = relativePath[1:]
+	}
+
+	rawContentBytes, err := assetsgen.Asset("assets/webui/" + relativePath)
+	if err != nil {
+		errorResponse(w, 404, fmt.Sprintf("not found '%s'", relativePath))
+		return
+	}
+
+	content := string(rawContentBytes)
+	contentType := "application/octet-stream"
+
+	if strings.HasSuffix(relativePath, ".md") {
+		context := &PageContext{
+			Name: "First context member",
+		}
+
+		contentType = "application/markdown"
+		interpolated := interpolateTemplate(relativePath, content, context)
+		if interpolated != nil {
+			content = *interpolated
+		}
+	} else if strings.HasSuffix(relativePath, ".css") {
+		contentType = "text/css"
+	} else if strings.HasSuffix(relativePath, ".js") {
+		contentType = "application/javascript"
+	} else if strings.HasSuffix(relativePath, ".html") {
+		contentType = "text/html"
+	}
+
+	httpResponse(w, 200, contentType, content)
+}
+
 // injects the WebServer context in http-router handler
 func (server *WebServer) makeHandler(handler func(http.ResponseWriter, *http.Request, httprouter.Params, *WebServer)) func(http.ResponseWriter, *http.Request, httprouter.Params) {
 	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -121,6 +129,7 @@ func (server *WebServer) makeHandler(handler func(http.ResponseWriter, *http.Req
 
 func (server *WebServer) init(router *httprouter.Router) {
 	router.GET("/certs", server.makeHandler(handlerCerts))
+	router.GET("/ui/*requested_resource", server.makeHandler(handlerGetWebUI))
 	router.GET("/toto/:test", server.makeHandler(handlerDemo))
 }
 
@@ -128,6 +137,9 @@ type WebServer struct {
 	name       string
 	privateKey *rsa.PrivateKey
 	crypto     *jwt.RSASHA
+	n          string
+	e          string
+	kid        string
 }
 
 // Start runs a webserver hosting the application
@@ -148,6 +160,13 @@ func Start(port int) {
 	fmt.Println("loading private key...")
 	privateKey := loadPEMKey("private.pem")
 
+	n := base64.RawURLEncoding.EncodeToString(privateKey.PublicKey.N.Bytes())
+	e := encodeUint64ToString(uint64(privateKey.PublicKey.E))
+	checksum := sha512.New()
+	checksum.Write(privateKey.PublicKey.N.Bytes())
+	checksum.Write(encodeUint64ToBytes(uint64(privateKey.PublicKey.E)))
+	kid := base64.RawURLEncoding.EncodeToString(checksum.Sum(make([]byte, 0)))
+
 	router := httprouter.New()
 	if router == nil {
 		fmt.Printf("Failed to instantiate the router, exit\n")
@@ -159,6 +178,9 @@ func Start(port int) {
 		name:       "sesame",
 		privateKey: privateKey,
 		crypto:     crypto,
+		n:          n,
+		e:          e,
+		kid:        kid,
 	}
 
 	server.init(router)
@@ -166,41 +188,4 @@ func Start(port int) {
 	fmt.Printf("\n you can use your internet browser to go here : http://127.0.0.1:%d\n", port)
 
 	log.Fatal(http.ListenAndServe(fmt.Sprintf("127.0.0.1:%d", port), router))
-}
-
-func checkError(err error) {
-	if err != nil {
-		fmt.Println("Fatal error ", err.Error())
-		os.Exit(1)
-	}
-}
-
-func loadPEMKey(fileName string) (key *rsa.PrivateKey) {
-	bytes, err := ioutil.ReadFile(fileName)
-	checkError(err)
-
-	block, _ := pem.Decode(bytes)
-	if block == nil {
-		fmt.Println("Cannot decode key pem payload")
-		os.Exit(1)
-	}
-
-	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
-	checkError(err)
-
-	return privateKey
-}
-
-func savePEMKey(fileName string, key *rsa.PrivateKey) {
-	outFile, err := os.Create(fileName)
-	checkError(err)
-	defer outFile.Close()
-
-	var privateKey = &pem.Block{
-		Type:  "PRIVATE KEY",
-		Bytes: x509.MarshalPKCS1PrivateKey(key),
-	}
-
-	err = pem.Encode(outFile, privateKey)
-	checkError(err)
 }

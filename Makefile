@@ -15,7 +15,7 @@ build-prepare:
 .PHONY: build-embed-assets
 build-embed-assets:
 	@echo "embedding assets..."
-	@./bin/go-bindata -o assetsgen/assets.go -pkg assetsgen assets/...
+	@./bin/go-bindata -o src/application/assetsgen/assets.go -pkg assetsgen assets/...
 
 .PHONY: build
 build: build-embed-assets
