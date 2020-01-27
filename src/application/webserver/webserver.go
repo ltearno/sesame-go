@@ -77,6 +77,7 @@ func generateToken(server *WebServer, userId string, duration uint64) string {
 	token, err := jwt.Sign(pl, server.crypto, jwt.KeyID(server.kid))
 	if err != nil {
 		fmt.Println("cannot sign ! ", err.Error())
+		return ""
 	}
 
 	return string(token)
