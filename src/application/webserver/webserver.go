@@ -24,6 +24,7 @@ type JwtPayload struct {
 	Uuid  string `json:"uuid"`
 	Role  string `json:"role"`
 	Roles string `json:"roles"`
+	Kid   string `json:"kid"`
 }
 
 type KeyDescription struct {
@@ -71,6 +72,7 @@ func generateToken(server *WebServer, userId string, duration uint64) string {
 		Uuid:  userId,
 		Role:  "{}",
 		Roles: "{}",
+		Kid:   server.kid,
 	}
 
 	token, err := jwt.Sign(pl, server.crypto)
