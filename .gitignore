@@ -5,3 +5,4 @@ bin/
 assetsgen/
 
 src/github.com/
+configuration.json

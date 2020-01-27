@@ -11,6 +11,7 @@ build-prepare:
 	@go get -u github.com/jteeuwen/go-bindata/...
 	@go get github.com/julienschmidt/httprouter
 	@go get -u github.com/gbrlsnchs/jwt
+	@go get github.com/google/uuid
 
 .PHONY: build-embed-assets
 build-embed-assets:

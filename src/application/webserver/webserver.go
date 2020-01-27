@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gbrlsnchs/jwt"
+	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
 
 	"crypto/rand"
@@ -20,8 +21,9 @@ import (
 
 type JwtPayload struct {
 	jwt.Payload
-	Foo string `json:"foo,omitempty"`
-	Bar int    `json:"bar,omitempty"`
+	Uuid  string `json:"uuid"`
+	Role  string `json:"role"`
+	Roles string `json:"roles"`
 }
 
 type KeyDescription struct {
@@ -54,53 +56,24 @@ func handlerCerts(w http.ResponseWriter, r *http.Request, p httprouter.Params, s
 	jsonResponse(w, 200, response)
 }
 
-func handlerDemo(w http.ResponseWriter, r *http.Request, p httprouter.Params, server *WebServer) {
-	test := p.ByName("test")
-
+func generateToken(server *WebServer, userId string, duration uint64) string {
 	now := time.Now()
 	pl := JwtPayload{
 		Payload: jwt.Payload{
-			Issuer:         "gbrlsnchs",
-			Subject:        test,
-			Audience:       jwt.Audience{"https://golang.org", "https://jwt.io"},
-			ExpirationTime: jwt.NumericDate(now.Add(24 * 30 * 12 * time.Hour)),
-			NotBefore:      jwt.NumericDate(now.Add(30 * time.Minute)),
+			Issuer:         server.config.IssuerUrl,
+			Subject:        server.config.Company,
+			Audience:       jwt.Audience{"IDP"},
+			ExpirationTime: jwt.NumericDate(now.Add(time.Duration(duration) * time.Second)),
 			IssuedAt:       jwt.NumericDate(now),
-			JWTID:          "foobar",
+			JWTID:          uuid.New().String(),
 		},
-		Foo: "foo",
-		Bar: 1337,
+
+		Uuid:  userId,
+		Role:  "{}",
+		Roles: "{}",
 	}
 
 	token, err := jwt.Sign(pl, server.crypto)
-	if err != nil {
-		fmt.Println("cannot sign ! ", err.Error())
-	}
-
-	jsonResponse(w, 200, struct {
-		Toto string
-	}{
-		Toto: string(token),
-	})
-}
-
-func generateToken(crypto *jwt.RSASHA) string {
-	now := time.Now()
-	pl := JwtPayload{
-		Payload: jwt.Payload{
-			Issuer:         "gbrlsnchs",
-			Subject:        "test",
-			Audience:       jwt.Audience{"https://golang.org", "https://jwt.io"},
-			ExpirationTime: jwt.NumericDate(now.Add(24 * 30 * 12 * time.Hour)),
-			NotBefore:      jwt.NumericDate(now.Add(30 * time.Minute)),
-			IssuedAt:       jwt.NumericDate(now),
-			JWTID:          "foobar",
-		},
-		Foo: "foo",
-		Bar: 1337,
-	}
-
-	token, err := jwt.Sign(pl, crypto)
 	if err != nil {
 		fmt.Println("cannot sign ! ", err.Error())
 	}
@@ -113,8 +86,8 @@ func handlerPostWebUILogin(w http.ResponseWriter, r *http.Request, p httprouter.
 	password := r.FormValue("password")
 	redirectURI := r.FormValue("redirect_uri")
 
-	if login == "aaa" && password == "aaa" {
-		redirectResponse(w, redirectURI+"#access_token="+generateToken(server.crypto))
+	if server.config.Users[login] == password {
+		redirectResponse(w, redirectURI+"#access_token="+generateToken(server, login, server.config.TokenDurationSecs))
 	} else {
 		redirectResponse(w, "index.html?message=error&redirect_uri="+redirectURI)
 	}
@@ -167,10 +140,10 @@ func (server *WebServer) init(router *httprouter.Router) {
 	router.GET("/certs", server.makeHandler(handlerCerts))
 	router.POST("/ui/index.html", server.makeHandler(handlerPostWebUILogin))
 	router.GET("/ui/*requested_resource", server.makeHandler(handlerGetWebUI))
-	router.GET("/toto/:test", server.makeHandler(handlerDemo))
 }
 
 type WebServer struct {
+	config     *ConfigurationFile
 	name       string
 	privateKey *rsa.PrivateKey
 	crypto     *jwt.RSASHA
@@ -212,6 +185,7 @@ func Start(port int) {
 	crypto := jwt.NewRS256(jwt.RSAPrivateKey(privateKey))
 
 	server := &WebServer{
+		config:     ReadConfiguration(),
 		name:       "sesame",
 		privateKey: privateKey,
 		crypto:     crypto,
