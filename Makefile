@@ -23,7 +23,7 @@ build: build-embed-assets
 .PHONY: install
 install: build-embed-assets
 	@echo "install binaries..."
-	#@go install $(APP_NAME)
+	@go install application
 
 .PHONY: run-serve
 run-serve:
@@ -31,11 +31,11 @@ run-serve:
 
 .PHONY: build-docker
 build-docker:
-	cat Dockerfile | sed 's/$${APP_NAME}/${APP_NAME}/g' | docker build . -f - -t $(APP_NAME):${COMMIT}
+	docker build . -t $(APP_NAME):${COMMIT}
 
 .PHONY: run-serve-docker
 run-docker:
-	docker run -it --rm -p 8080:8080 --user $(shell id -u):$(shell id -g) $(APP_NAME):${COMMIT}
+	docker run -it --rm -p 8080:8080 --user $(shell id -u):$(shell id -g) $(APP_NAME):${COMMIT} serve
 
 .PHONY: run-serve-interactive
 run-docker-interactive:

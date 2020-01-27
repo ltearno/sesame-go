@@ -43,7 +43,7 @@ func main() {
 	// execute the verb
 	switch verbs[0] {
 	case "serve":
-		relativeWorkdir := ".git-docs"
+		relativeWorkdir := "."
 		if len(verbs) > 1 {
 			relativeWorkdir = verbs[1]
 		}

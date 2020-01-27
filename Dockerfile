@@ -4,8 +4,9 @@ RUN apk add make git
 
 RUN mkdir /.cache && chmod ugo+rw /.cache
 
+WORKDIR /sesame-go
+
 ADD update-dependencies.sh ./
-RUN ls
 RUN sh ./update-dependencies.sh
 
 ADD Makefile ./
@@ -16,4 +17,6 @@ ADD configuration.json ./
 RUN make build-embed-assets
 RUN make install
 
-ENTRYPOINT [ "/go/bin/${APP_NAME}" ]
+RUN chown -R 1000:1000 /sesame-go
+
+ENTRYPOINT [ "/sesame-go/bin/application" ]
