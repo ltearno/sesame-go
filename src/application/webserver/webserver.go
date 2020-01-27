@@ -80,6 +80,8 @@ func generateToken(server *WebServer, userId string, duration uint64) string {
 		return ""
 	}
 
+	fmt.Println(now, " : generated jwt token for ", userId, " jti ", pl.Payload.JWTID, " duration ", duration)
+
 	return string(token)
 }
 
