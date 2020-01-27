@@ -12,6 +12,16 @@ func httpResponse(w http.ResponseWriter, code int, contentType string, body stri
 	w.Write([]byte(body))
 }
 
+func unauthenticatedResponse(w http.ResponseWriter) {
+	w.WriteHeader(401)
+	w.Write(nil)
+}
+
+func unauthorizedResponse(w http.ResponseWriter) {
+	w.WriteHeader(403)
+	w.Write(nil)
+}
+
 func redirectResponse(w http.ResponseWriter, location string) {
 	w.Header().Set("Location", location)
 	w.WriteHeader(301)
