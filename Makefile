@@ -8,10 +8,7 @@ all: install
 .PHONY: build-prepare
 build-prepare:
 	@echo "updating dependencies..."
-	@go get -u github.com/jteeuwen/go-bindata/...
-	@go get github.com/julienschmidt/httprouter
-	@go get -u github.com/gbrlsnchs/jwt
-	@go get github.com/google/uuid
+	@./update-dependencies.sh
 
 .PHONY: build-embed-assets
 build-embed-assets:
@@ -34,14 +31,12 @@ run-serve:
 
 .PHONY: build-docker
 build-docker:
-	cat Dockerfile \
-		| sed 's/$${APP_NAME}/${APP_NAME}/g' \
-		| docker build . -f - -t $(APP_NAME):${COMMIT}
+	cat Dockerfile | sed 's/$${APP_NAME}/${APP_NAME}/g' | docker build . -f - -t $(APP_NAME):${COMMIT}
 
 .PHONY: run-serve-docker
-run-serve-docker:
-	docker run -it --rm -p 9988:9988 --user $(shell id -u):$(shell id -g) $(APP_NAME):${COMMIT} -port 9988 serve /test-dir
+run-docker:
+	docker run -it --rm -p 8080:8080 --user $(shell id -u):$(shell id -g) $(APP_NAME):${COMMIT}
 
 .PHONY: run-serve-interactive
 run-docker-interactive:
-	docker run -it --rm -v "$(shell pwd)":/localhost --user $(shell id -u):$(shell id -g) --entrypoint sh $(APP_NAME):${COMMIT}
+	docker run -it --rm -p 8080:8080 -v "$(shell pwd)":/localhost --entrypoint sh $(APP_NAME):${COMMIT}

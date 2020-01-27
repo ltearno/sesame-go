@@ -4,13 +4,15 @@ RUN apk add make git
 
 RUN mkdir /.cache && chmod ugo+rw /.cache
 
-RUN mkdir -p /test-dir
+ADD update-dependencies.sh ./
+RUN ls
+RUN sh ./update-dependencies.sh
 
 ADD Makefile ./
 ADD src ./src/
 ADD assets ./assets/
+ADD configuration.json ./
 
-RUN make build-prepare
 RUN make build-embed-assets
 RUN make install
 
