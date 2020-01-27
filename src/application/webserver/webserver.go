@@ -95,6 +95,20 @@ func handlerCreateIdToken(w http.ResponseWriter, r *http.Request, p httprouter.P
 	}
 }
 
+func handlerPostAuth(w http.ResponseWriter, r *http.Request, p httprouter.Params, server *WebServer) {
+	// be careful that the x-forwarded-user header is used as is
+	// because it is assumed that the sesame executable is protected
+	// by a gateway and runs in a safe environment.
+	userID := r.Header.Get("x-forwarded-user")
+	if _, ok := server.config.Users[userID]; ok {
+		jsonResponse(w, 200, struct {
+			Token string `json:"token"`
+		}{Token: generateToken(server, userID, server.config.TokenApiDurationSecs)})
+	} else {
+		unauthorizedResponse(w)
+	}
+}
+
 func handlerPostWebUILogin(w http.ResponseWriter, r *http.Request, p httprouter.Params, server *WebServer) {
 	login := r.FormValue("login")
 	password := r.FormValue("password")
@@ -155,6 +169,7 @@ func (server *WebServer) init(router *httprouter.Router) {
 	router.POST("/ui/index.html", server.makeHandler(handlerPostWebUILogin))
 	router.GET("/ui/*requested_resource", server.makeHandler(handlerGetWebUI))
 	router.POST("/create-id-token", server.makeHandler(handlerCreateIdToken))
+	router.POST("/auth", server.makeHandler(handlerPostAuth))
 }
 
 type WebServer struct {
