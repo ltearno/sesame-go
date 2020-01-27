@@ -1,0 +1,7 @@
+releases/
+releases.tag.gz
+pkg/
+bin/
+assetsgen/
+
+git-docs

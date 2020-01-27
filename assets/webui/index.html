@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="mui-0.9.42/css/mui.css" rel="stylesheet" type="text/css" />
+    <link href="index.css" rel="stylesheet" type="text/css" />
+    <script src="mui-0.9.42/js/mui.js"></script>
+    <script src="marked.min.js"></script>
+
+    <title>Git Docs</title>
+</head>
+
+<body class="hide-sidedrawer">
+    <div id="sidedrawer" class="mui--no-user-select">
+        <div id="sidedrawer-brand" class="mui--appbar-line-height">
+            <span class="mui--text-title">Brand.io</span>
+        </div>
+        <div class="mui-divider"></div>
+        <ul>
+            <li>
+                <strong class="sidedrawer-title">Category 1</strong>
+                <ul>
+                    <li><a href="#">Item 1</a></li>
+                    <li><a href="#">Item 2</a></li>
+                    <li><a href="#">Item 3</a></li>
+                </ul>
+            </li>
+            <li>
+                <strong class="sidedrawer-title">Category 2</strong>
+                <ul>
+                    <li><a href="#">Item 1</a></li>
+                    <li><a href="#">Item 2</a></li>
+                    <li><a href="#">Item 3</a></li>
+                </ul>
+            </li>
+            <li>
+                <strong class="sidedrawer-title">Category 3</strong>
+                <ul>
+                    <li><a href="#">Item 1</a></li>
+                    <li><a href="#">Item 2</a></li>
+                    <li><a href="#">Item 3</a></li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+    <header id="header">
+        <div class="mui-appbar mui--appbar-line-height">
+            <div class="mui-container-fluid">
+                <a id="js-show-sidedrawer"
+                    class="sidedrawer-toggle mui--visible-xs-inline-block mui--visible-sm-inline-block">☰</a>
+                <a id="js-hide-sidedrawer" class="sidedrawer-toggle mui--hidden-xs mui--hidden-sm ">☰</a>
+                <span class="mui--text-title mui--visible-xs-inline-block">Brand.io</span>
+            </div>
+        </div>
+    </header>
+    <div id="content-wrapper">
+        <div class='mui-container-fluid'>
+            <div class="mui--appbar-height"></div>
+            <h1>Status</h1>
+            <div class="mui-panel">
+                <div id='board-status'></div>
+                <div id='board-categories'></div>
+                <form id='new-category-form'>
+                    <label><input id='new-category-name' type='text' /></label>
+                    <button role='submit' class="mui-btn mui-btn--primary mui-btn--flat">Create category</button>
+                </form>
+            </div>
+
+            <h1>Board</h1>
+            <div class="mui-panel">
+                <div style='padding-bottom:1em;'>
+                    <div id='tagsList'></div>
+                    <div style='padding-top:1em;'>
+                        <label>Search : <input id='search-document' type="text" placeholder="search tags..." /></label>
+                        <label>Columns : <input id='columns-document' type="text" size="50"
+                                placeholder="list columns sub-search, comma separated" /></label>
+                    </div>
+                </div>
+                <div class="mui-divider"></div>
+                <div id='board-documents-ul'></div>
+                <div class="mui-divider"></div>
+                <form id='new-document-form'>
+                    <label>Add document : <input id='new-document-name' type="text"
+                            placeholder="new document's name..." /></label>
+                    <button role="submit" class="mui-btn mui-btn--primary mui-btn--flat">Create document</button>
+                </form>
+            </div>
+
+            <h1>Detail zone</h1>
+            <div id='board-opened-documents'></div>
+
+            <h1>Logs</h1>
+            <div class="mui-panel">
+                <div id="log"></div>
+            </div>
+        </div>
+    </div>
+    <footer id="footer">
+        <div class="mui-container-fluid">
+            <br>
+            Made with ♥ by <a href="https://github.com/ltearno">Ltearno</a>
+        </div>
+    </footer>
+
+    <script src="index.js"></script>
+</body>
+
+</html>
