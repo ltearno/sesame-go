@@ -84,6 +84,42 @@ func handlerDemo(w http.ResponseWriter, r *http.Request, p httprouter.Params, se
 	})
 }
 
+func generateToken(crypto *jwt.RSASHA) string {
+	now := time.Now()
+	pl := JwtPayload{
+		Payload: jwt.Payload{
+			Issuer:         "gbrlsnchs",
+			Subject:        "test",
+			Audience:       jwt.Audience{"https://golang.org", "https://jwt.io"},
+			ExpirationTime: jwt.NumericDate(now.Add(24 * 30 * 12 * time.Hour)),
+			NotBefore:      jwt.NumericDate(now.Add(30 * time.Minute)),
+			IssuedAt:       jwt.NumericDate(now),
+			JWTID:          "foobar",
+		},
+		Foo: "foo",
+		Bar: 1337,
+	}
+
+	token, err := jwt.Sign(pl, crypto)
+	if err != nil {
+		fmt.Println("cannot sign ! ", err.Error())
+	}
+
+	return string(token)
+}
+
+func handlerPostWebUILogin(w http.ResponseWriter, r *http.Request, p httprouter.Params, server *WebServer) {
+	login := r.FormValue("login")
+	password := r.FormValue("password")
+	redirectURI := r.FormValue("redirect_uri")
+
+	if login == "aaa" && password == "aaa" {
+		redirectResponse(w, redirectURI+"#access_token="+generateToken(server.crypto))
+	} else {
+		redirectResponse(w, "index.html?message=error&redirect_uri="+redirectURI)
+	}
+}
+
 func handlerGetWebUI(w http.ResponseWriter, r *http.Request, p httprouter.Params, server *WebServer) {
 	relativePath := p.ByName("requested_resource")
 	if strings.HasPrefix(relativePath, "/") {
@@ -129,6 +165,7 @@ func (server *WebServer) makeHandler(handler func(http.ResponseWriter, *http.Req
 
 func (server *WebServer) init(router *httprouter.Router) {
 	router.GET("/certs", server.makeHandler(handlerCerts))
+	router.POST("/ui/index.html", server.makeHandler(handlerPostWebUILogin))
 	router.GET("/ui/*requested_resource", server.makeHandler(handlerGetWebUI))
 	router.GET("/toto/:test", server.makeHandler(handlerDemo))
 }

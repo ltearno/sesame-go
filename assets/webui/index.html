@@ -15,12 +15,43 @@
 <body class="hide-sidedrawer">
     <div class="mui-container">
         <div class="mui-panel">
-            <h1>My Title</h1>
-            <button class="mui-btn mui-btn--primary mui-btn--raised">My Button</button>
+            <form class="mui-form" method="POST">
+                <legend id='legend'>Sign-in</legend>
+                <div class="mui-textfield">
+                    <input name="login" type="text" placeholder="name">
+                </div>
+                <div class="mui-textfield">
+                    <input name="password" type="text" placeholder="password">
+                </div>
+
+                <input id="redirect_uri" name="redirect_uri" type="hidden" value="">
+                <button type="submit" class="mui-btn mui-btn--raised">Connect</button>
+            </form>
         </div>
     </div>
 
-    <script src="index.js"></script>
+    <script>
+        const params = (function () {
+            const params = {}
+            const query = window.location.search.substr(1)
+            for (const part of query.split("&")) {
+                let idx = part.indexOf('=')
+                if (idx <= 0)
+                    continue
+                let name = part.substr(0, idx)
+                let value = part.substr(idx + 1)
+
+                params[name] = value
+            }
+            return params
+        })()
+
+        window.onload = () => {
+            document.getElementById("redirect_uri").value = params["redirect_uri"]
+            if (params["message"] == "error")
+                document.getElementById("legend").innerHTML += ` (retry)`
+        }
+    </script>
 </body>
 
 </html>

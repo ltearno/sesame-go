@@ -12,6 +12,12 @@ func httpResponse(w http.ResponseWriter, code int, contentType string, body stri
 	w.Write([]byte(body))
 }
 
+func redirectResponse(w http.ResponseWriter, location string) {
+	w.Header().Set("Location", location)
+	w.WriteHeader(301)
+	w.Write(nil)
+}
+
 func jsonResponse(w http.ResponseWriter, code int, value interface{}) {
 	body, err := json.Marshal(value)
 	if err != nil {
